@@ -1,0 +1,100 @@
+Pseudo
+function FIND_HEADER(string LINE, string SEARCH_PARAMETER);
+function REMOVE_NEWLINE(string DATA);
+function DECODE(string DATA);
+function QUOTED_PRINTABLE_ENCODE(string DATA, string CHARSET);
+table CHARSET_TABLE(hexedecimal_string DATA, string CHARSET);
+
+void MAIN(argument){
+        string SEARCHING_HEADER = argument["-h"];
+        string DECODE_INPUT;
+
+        while(input(stdin, ONE_LINE_AT_A_TIME, LINE_BUFFER) != null){
+                if(FIND_HEADER(LINE_BUFFER, SEARCHING_HEADER) == 1){
+                        DECODE_INPUT = DECODE_INPUT + LINE_BUFFER;
+                        while(input(stdin ,MOVE_NEXT_LINE, LINE_BUFFER) != null){
+                                if((LINE_BUFFER[first_character] == <SPACE CHARACTER>) OR ((LINE_BUFFER[first_character] == <TAB CHARACTER>)){
+                                        DECODE_INPUT = DECODE_INPUT + LINE_BUFFER;
+                                }else{
+                                        break_out_of_1st_while_loop;
+                                }
+                        }
+                }
+        }
+
+
+        print DECODE(REMOVE_NEWLINE(DECODE_INPUT));
+}
+
+
+FIND_HEADER(string LINE, string SEARCH_PARAMETER){
+        if(string_compare(LINE,SEARCH_PARAMETER, string_lenght(SEARCH_PARAMETER)) == 1){
+                return 1;
+        }else{
+                return 0;
+        }
+}
+
+
+REMOVE_NEWLINE(string DATA){
+        return replace_string(DATA, <NEWLINE CHARACTER>, <SPACE CHARACTER>);
+}
+
+CHARSET_TABLE(hexedecimal_string DATA, string CHARSET){
+        return UNICODE_OUTPUT;
+}
+
+QUOTED_PRINTABLE_ENCODE(string DATA, string CHARSET){
+        string OUTPUT;
+
+        DATA = replace_string(<'_'>, <SPACE CHARACTER>, DATA);
+        for(i<character> in DATA){
+                if(DATA[i] == <EQUAL SIGN(=)>){
+                        OUTPUT = OUTPUT + CHARSET_TABLE(DATA[i+1] + DATA[i+2], CHARSET);
+                        i = i + 3; // ...=FD...
+                }else{
+                        OUTPUT = OUTPUT + DATA[i];
+                }
+        }
+
+        return OUTPUT;
+}
+
+B64_ENCODE(string DATA){
+        string OUPUT;
+        ..
+        return OUTPUT;
+}
+
+DECODE(string DATA){
+        string OUTPUT;
+        string CHARSET;
+        string ENCODE_TYPE;
+        string MIME_TEXT;
+        regex MIME_REGEX_STYLE = "=?CHARSET?ENCODE_TYPE?MIME_TEXT?=";
+
+        replace_string(MIME_REGEX_STYLE + (n * <SPACE CHARACTER>) + MIME_REGEX_STYLE , MIME_REGEX_STYLE + (0 * <SPACE CHARACTER>) + MIME_REGEX_STYLE , DATA);
+
+
+        for(i<character> in DATA){
+                if( (DATA[i] == <EQUAL SIGN(=)>) AND (DATA[i+1] == <QUESTION MARK(?) ) {
+                        //MIME ENCODE FOUND
+                        REGEX("=?CHARSET?ENCODE_TYPE?MIME_TEXT?=" , DATA[i]);
+
+                        if(ENCODE_TYPE == <'Q'>){
+                                OUTPUT = OUTPUT + QUOTED_PRINTABLE_ENCODE(CHARSET, MIMETEXT);
+                                i = i + string_lenght("=?CHARSET?ENCODE_TYPE?MIME_TEXT?=");
+                        }elseif(ENCODE_TYPE == <'B'>){
+                                OUTPUT = OUTPUT + B64_ENCODE(MIMETEXT);
+                                i = i + string_lenght("=?CHARSET?ENCODE_TYPE?MIME_TEXT?=");
+                        }else{
+                                error;
+                        }
+                }else{
+                        OUTPUT = OUTPUT + DATA[i];
+                }
+        }
+
+        return OUTPUT;
+}
+                                            
