@@ -123,20 +123,26 @@ int main(int argc , char* argv[]){
   }
 
   if(PARAMETER == ""){
-    cout << "++NO PARAMETER FOUND++";
+    //cout << "++NO PARAMETER FOUND++";
     return 1; //no header specified
   }
 
   while(getline(cin, INPUT)){
-    
+    //cout << INPUT << endl;
     if(INPUT[0] == '\r' || INPUT[0] == '\n'){
-      cout << "++HEADER SEARCH ENDED DUE TO EMPTY LINE FROM INPUT++" << endl;
+      //cout << "++HEADER SEARCH ENDED DUE TO EMPTY LINE FROM INPUT++" << endl;
       break;
     }
     
     if(find_header(INPUT, PARAMETER) == 1){
+      if(INPUT.size() == PARAMETER.size() + 1){
+        INPUT = "";
+        break;
+      }
+
       int multiLineCounter = 0;
       INPUT = trim_string(extract_header_field(INPUT, PARAMETER), 1);
+      
       string multiLineHeader = "";
       while(getline(cin, multiLineHeader)){
         if(multiLineCounter == 0){
@@ -155,7 +161,12 @@ int main(int argc , char* argv[]){
   }
 
   //cout << remove_mime_space("=?UTF-8?Q?Do=C4=9Fukan_=C3=87EL=C4=B0K,_Linked?= =?UTF-8?Q?In=E2=80=99de_sizi_bekleyen_1_?= =?UTF-8?Q?davetiye_ve_3_yeni_g=C3=BCncelleme_sizi_bekliyor?=");
-  cout << header_decode(remove_mime_space(remove_newline(INPUT)));
+  
+  if(header_decode(remove_mime_space(remove_newline(INPUT))).size() == 0){
+    cout << header_decode(remove_mime_space(remove_newline(INPUT)));    
+  }else{
+    cout << header_decode(remove_mime_space(remove_newline(INPUT))) << endl;
+  }
   return 0;
 }
 
