@@ -161,17 +161,19 @@ int main(int argc , char* argv[]){
   }
 
   //cout << remove_mime_space("=?UTF-8?Q?Do=C4=9Fukan_=C3=87EL=C4=B0K,_Linked?= =?UTF-8?Q?In=E2=80=99de_sizi_bekleyen_1_?= =?UTF-8?Q?davetiye_ve_3_yeni_g=C3=BCncelleme_sizi_bekliyor?=");
-  
-  if(header_decode(remove_mime_space(remove_newline(INPUT))).size() == 0){
-    cout << header_decode(remove_mime_space(remove_newline(INPUT)));    
+  string temp;
+  temp = header_decode(remove_mime_space(remove_newline(INPUT)));
+  if(temp.size() == 0){
+    cout << temp;    
   }else{
-    cout << header_decode(remove_mime_space(remove_newline(INPUT))) << endl;
+    cout << temp << endl;
   }
   return 0;
 }
 
 int find_header(string header_line, string search_header){
-  header_line = header_line + ": ";
+  search_header = search_header + ":";
+  //header_line = header_line + ": ";
   if(header_line.substr(0, search_header.size()) == search_header){
     return 1;
   }else{
