@@ -197,7 +197,7 @@ string test(string input){
 
 string extract_header_field(string line, string extract_parameter){
   string result = "";
-  extract_parameter = extract_parameter + ": "; //
+  extract_parameter = extract_parameter + ":"; //
   result = line.substr(extract_parameter.size(), line.size() - extract_parameter.size());
   return result;
 }
@@ -4915,8 +4915,8 @@ string remove_mime_space(string input){
       output = output + input[i] + input[i+1];
       i=i+2;
       j=i;
-	  
-	  if(j >= inputLenght){
+    
+    if(j >= inputLenght){
           break;
       }
 
