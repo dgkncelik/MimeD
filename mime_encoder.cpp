@@ -172,7 +172,8 @@ int main(int argc , char* argv[]){
 }
 
 int find_header(string header_line, string search_header){
-  header_line = header_line + ": ";
+  search_header = search_header + ":";
+  //header_line = header_line + ": ";
   if(header_line.substr(0, search_header.size()) == search_header){
     return 1;
   }else{
