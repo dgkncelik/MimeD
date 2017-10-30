@@ -386,6 +386,7 @@ string quoted_printable_decode(string mime, string charset){
   int mimeLenght = 0;
   int index = 0;
   int i = 0;
+  char ascii_char;
   stringstream output;
   mimeLenght = mime.size();
   //cout << mimeLenght;
@@ -418,12 +419,23 @@ string quoted_printable_decode(string mime, string charset){
       }
       
       if((charset == "UTF-8") || (charset == "utf-8")){
-        output << utf8_table(index);
+        if(index < 128){
+          ascii_char = index;
+          output << ascii_char;
+        }else{
+          output << utf8_table(index);          
+        }
       }else{
-        output << charset_table(index, charset);        
+        if(index < 128){
+          ascii_char = index;
+          output << ascii_char;
+        }else{
+          output << charset_table(index, charset);       
+        }
       }
 
       index = 0;
+      ascii_char = 0;
       i = i + 2;
     }else{
       output << mime[i];
