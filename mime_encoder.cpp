@@ -111,12 +111,20 @@ int main(int argc , char* argv[]){
   int i;
   string INPUT = "";
   string PARAMETER = "";
+  int DEBUG = 0;
 
   for(i=1; i < argc; i++){
     string arg = argv[i];
     if((arg == "-h") || (arg == "--header")){
       if(i + 1 < argc){
         PARAMETER = argv[i+1];
+        //cout << PARAMETER << endl;
+      }
+    }
+
+    if((arg == "-d") || (arg == "--debug")){
+      if(i + 1 < argc){
+        DEBUG = 1;
         //cout << PARAMETER << endl;
       }
     }
