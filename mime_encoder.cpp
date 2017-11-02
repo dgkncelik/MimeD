@@ -4892,37 +4892,35 @@ string utf8_table(int index) {
     return output.str();
 }
 
+//remove all the newline characters from input
 string remove_newline(string input) {
-    int i=0;
     string output;
-    for(i=0; i<input.size(); i++) {
+    for(int i=0; i<input.size(); i++) {
         if((input[i] != '\r') && (input[i] != '\n')) {
             output = output + input[i];
         }
     }
-
     return output;
 }
 
+//remove spaces between individuals mime
 string remove_mime_space(string input) {
-    int i = 0;
-    int j = 0;
-    int inputLenght = input.size();
+    int inputLength = input.size();
     int spaceBetweenMime = 0;
     int otherCharFind = 0;
-    string output = "";
-    for(i=0; i<inputLenght; i++) {
+    string output;
+    for(int i=0; i<inputLength; i++) {
         if((input[i] == '?') && (input[i+1] == '=')) {
             output = output + input[i] + input[i+1];
             i=i+2;
-            j=i;
+            int j=i;
 
-            if(j >= inputLenght){
+            if(j >= inputLength){
                 break;
             }
 
-            while((input[j] != '=')||(input[j+1] != '?')) {
-                if(j >= inputLenght) {
+            while((input[j] != '=') || (input[j+1] != '?')) {
+                if(j >= inputLength) {
                     break;
                 }
 
@@ -4944,8 +4942,4 @@ string remove_mime_space(string input) {
         spaceBetweenMime = 0;
     }
     return output;
-}
-
-int error(int error_no) {
-    return error_no;
 }
