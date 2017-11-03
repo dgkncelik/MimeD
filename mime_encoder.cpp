@@ -7,16 +7,15 @@
 using namespace std;
 string extract_header_field(string line, string extract_parameter);
 string header_decode(string header);
-string trim_string(string line, int trim_way);
+string left_trim_string(string line);
 string quoted_printable_decode(string mime, string charset);
 string charset_table(int char_index, string charset);
 string utf8_table(int index);
 string remove_newline(string input);
 string remove_mime_space(string input);
-string test(string test);
 bool is_header_exist(string header_line, string search_header);
 
-using namespace std;
+//http://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp
 static const std::string base64_chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                 "abcdefghijklmnopqrstuvwxyz"
@@ -25,47 +24,6 @@ static inline bool is_base64(unsigned char c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-    std::string ret;
-    int i = 0;
-    int j = 0;
-    unsigned char char_array_3[3];
-    unsigned char char_array_4[4];
-
-    while (in_len--) {
-        char_array_3[i++] = *(bytes_to_encode++);
-        if (i == 3) {
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            char_array_4[3] = char_array_3[2] & 0x3f;
-
-            for(i = 0; (i <4) ; i++)
-                ret += base64_chars[char_array_4[i]];
-            i = 0;
-        }
-    }
-
-    if (i)
-    {
-        for(j = i; j < 3; j++)
-            char_array_3[j] = '\0';
-
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        char_array_4[3] = char_array_3[2] & 0x3f;
-
-        for (j = 0; j < i + 1; j++)
-            ret += base64_chars[char_array_4[j]];
-
-        while(i++ < 3)
-            ret += '=';
-
-    }
-
-    return ret;
-}
 std::string base64_decode(std::string const& encoded_string) {
     int in_len = encoded_string.size();
     int i = 0;
@@ -108,57 +66,43 @@ std::string base64_decode(std::string const& encoded_string) {
 }
 
 int main(int argc , char* argv[]){
-    int i;
     string INPUT,PARAMETER;
 
-    for(i=1; i < argc; i++) {
-        string arg = argv[i];
-        if((arg == "-h") || (arg == "--header")) {
-            if(i + 1 < argc) {
-                PARAMETER = argv[i+1];
-                //cout << PARAMETER << endl;
-            }
+    string arg = argv[1];
+    if((arg == "-h") || (arg == "--header")) {
+        if(2 < argc) {
+            PARAMETER = argv[2];
+        } else {
+            return 1;
         }
     }
 
-    if(PARAMETER.size() == 0) {
-        //cout << "++NO PARAMETER FOUND++";
-        return 1; //no header specified
-    }
-
     while(getline(cin, INPUT)) {
-        //cout << INPUT << endl;
+        //search until mail, newline indicates that mail content is starting
         if(INPUT[0] == '\r' || INPUT[0] == '\n') {
-            //cout << "++HEADER SEARCH ENDED DUE TO EMPTY LINE FROM INPUT++" << endl;
             break;
         }
 
         if(is_header_exist(INPUT, PARAMETER)) {
             if(INPUT.size() == PARAMETER.size() + 1) {
-                INPUT = "";
-                break;
+                return 0;
             }
 
-            int multiLineCounter = 0;
-            INPUT = trim_string(extract_header_field(INPUT, PARAMETER), 1);
+            INPUT = left_trim_string(extract_header_field(INPUT, PARAMETER));
 
             string multiLineHeader;
             while(getline(cin, multiLineHeader)) {
-                if( (multiLineCounter != 0) && ((multiLineHeader[0] == ' ') || (multiLineHeader[0] == '\t')) ) {
+                if( (multiLineHeader[0] == ' ') || (multiLineHeader[0] == '\t') ) {
                     INPUT = INPUT  + multiLineHeader;
-                    multiLineCounter++;
                 } else {
                     break;
                 }
             }
             break;
         }
-
     }
 
-    //cout << remove_mime_space("=?UTF-8?Q?Do=C4=9Fukan_=C3=87EL=C4=B0K,_Linked?= =?UTF-8?Q?In=E2=80=99de_sizi_bekleyen_1_?= =?UTF-8?Q?davetiye_ve_3_yeni_g=C3=BCncelleme_sizi_bekliyor?=");
-    string temp;
-    temp = header_decode(remove_mime_space(remove_newline(INPUT)));
+    string temp = header_decode(remove_mime_space(remove_newline(INPUT)));
     cout << temp;
     if(temp.size() != 0) {
         cout << endl;
@@ -176,65 +120,24 @@ string extract_header_field(string line, string extract_parameter) {
     return line.substr(extract_parameter.size(), line.size() - extract_parameter.size());
 }
 
-string trim_string(string line, int trim_way){
-    string result = "";
-    int i = 0;
-    int j = 0;
+string left_trim_string(string line){
     int spaceLeftCounter = 0;
-    int spaceRigtCounter = 0;
-    //    "  wew"
-    switch(trim_way){
-        case 0:
-            //trim left and right
-            for(i=0; i<line.size(); i++){
-                if((line[i] == ' ') || (line[i] == '\t')){
-                    spaceLeftCounter++;
-                }else{
-                    break;
-                }
-            }
-            result = line.substr(spaceLeftCounter, line.size() - spaceLeftCounter);
-
-            for(j=result.size() - 1; j>-1; j--){
-                if((result[j] == ' ') || (result[j] == '\t')){
-                    spaceRigtCounter++;
-                }else{
-                    break;
-                }
-            }
-            result = result.substr(0, result.size() - spaceRigtCounter);
-
+    //trim left
+    for(int i=0; i<line.size(); i++){
+        if((line[i] == ' ') || (line[i] == '\t')){
+            spaceLeftCounter++;
+        } else {
             break;
-        case 1:
-            //trim left
-            for(i=0; i<line.size(); i++){
-                if((line[i] == ' ') || (line[i] == '\t')){
-                    spaceLeftCounter++;
-                }else{
-                    break;
-                }
-            }
-            result = line.substr(spaceLeftCounter, line.size() - spaceLeftCounter);
-            break;
-        case 2:
-            for(j=line.size() - 1; j>-1; j--){
-                if((line[j] == ' ') || (line[j] == '\t')){
-                    spaceRigtCounter++;
-                }else{
-                    break;
-                }
-            }
-            result = line.substr(0, line.size() - spaceRigtCounter);
-            break;
+        }
     }
-    return result;
+    return line.substr(spaceLeftCounter, line.size() - spaceLeftCounter);
 }
 
+//decode every mime in a input header
 string header_decode(string header){
     int b64 = 0;
     string output ;
     string b64_output;
-
     int headerLength = header.size();
     for(int i=0; i<headerLength; i++) {
         int mimeEncodeType;
@@ -251,28 +154,24 @@ string header_decode(string header){
                     return header;
                 }
             }
+            i++;
+
+            if((header[i] == 'B') || (header[i] == 'b')){
+                mimeEncodeType = 0;
+            } else if((header[i] == 'Q') || (header[i] == 'q')) {
+                mimeEncodeType = 1;
+            } else {
+                // ERROR
+                return header;
+            }
+            i++;
+
             if(header[i] != '?') {
                 //ERROR;
                 return header;
             }
             i++;
 
-            if((header[i] == 'B') || (header[i] == 'b')){
-                mimeEncodeType = 0;
-                i++;
-            } else if((header[i] == 'Q') || (header[i] == 'q')) {
-                mimeEncodeType = 1;
-                i++;
-            } else {
-                // ERROR
-                return header;
-            }
-            if(header[i] != '?') {
-                //ERROR;
-                return header;
-            } else {
-                i++;
-            }
             while((header[i] != '?') || (header[i+1] != '=')) {
                 mimeText = mimeText + header[i];
                 i++;
@@ -282,16 +181,15 @@ string header_decode(string header){
                 }
             }
             i++;
+
             if(mimeEncodeType == 1) {
                 output = output + quoted_printable_decode(mimeText, mimeCharset);
-            }
-
-            if(mimeEncodeType == 0) {
+            } else {
                 b64_output = base64_decode(mimeText);
                 for(int p=0; p<b64_output.size(); p++) {
                     b64 = b64_output[p];
 
-                    if(b64<0){
+                    if(b64 < 0){
                         b64 = b64 + 256;
                     }
 
@@ -310,7 +208,6 @@ string header_decode(string header){
             output = output + header[i];
         }
     }
-
     return output;
 }
 
@@ -320,7 +217,6 @@ string quoted_printable_decode(string mime, string charset){
     for(int i=0; i<mime.size(); i++) {
         int index = 0;
         char ascii_char = 0;
-        //cout << i;
         if(mime[i] == '_') {
             output << ' ';
         } else if(mime[i] == '=') {
@@ -386,10 +282,10 @@ string remove_newline(string input) {
 //remove spaces between individuals mime
 string remove_mime_space(string input) {
     int inputLength = input.size();
-    int spaceBetweenMime = 0;
-    int otherCharFind = 0;
     string output;
     for(int i=0; i<inputLength; i++) {
+        int spaceBetweenMime = 0;
+        int otherCharFind = 0;
         if((input[i] == '?') && (input[i+1] == '=')) {
             output = output + input[i] + input[i+1];
             i=i+2;
@@ -417,9 +313,6 @@ string remove_mime_space(string input) {
             i = i + spaceBetweenMime;
         }
         output = output + input[i];
-
-        otherCharFind = 0;
-        spaceBetweenMime = 0;
     }
     return output;
 }
@@ -4870,6 +4763,5 @@ string charset_table(int char_index, string charset) {
     } else {
         output << charset_array[char_index -1][0] << charset_array[char_index -1][1];
     }
-    //cout << output.str();
     return output.str();
 }
