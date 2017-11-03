@@ -171,22 +171,6 @@ bool is_header_exist(string header_line, string search_header) {
     return (header_line.substr(0, search_header.size()) == search_header);
 }
 
-string test(string input){
-    int i=0;
-    string output;
-    for(i=0; i<input.size(); i++) {
-        if(input[i] == 0x0D){
-            output = output + "<>";
-        } else if(input[i] == 0x0A){
-            output = output + "<>";
-        } else {
-            output = output + input[i];
-        }
-    }
-
-    return output;
-}
-
 string extract_header_field(string line, string extract_parameter) {
     extract_parameter = extract_parameter + ":"; //
     return line.substr(extract_parameter.size(), line.size() - extract_parameter.size());
@@ -247,125 +231,83 @@ string trim_string(string line, int trim_way){
 }
 
 string header_decode(string header){
-    int i = 0;
-    int p = 0;
     int b64 = 0;
-    int mimeStart = 0;
-    int mimeEnd = 0;
-    int mimeCharsetStart = 0;
-    int mimeCharsetEnd = 0;
-    int mimeEncodeTypeStart = 0;
-    int mimeTextStart = 0;
-    int mimeTextEnd = 0;
-    int headerLenght = 0;
-    int mimeEncodeType = -1;
-    string mimeCharset = "";
-    string mimeText = "";
-    string output = "";
-    string b64_output = "";
+    string output ;
+    string b64_output;
 
-
-    headerLenght = header.size();
-    for(i=0; i<headerLenght; i++){
+    int headerLength = header.size();
+    for(int i=0; i<headerLength; i++) {
+        int mimeEncodeType;
+        string mimeCharset;
+        string mimeText;
         if((header[i] == '=') && (header[i+1] == '?')) {
-            mimeStart = i;
             i = i + 2;
-            //cout << mimeStart << endl;
-            mimeCharsetStart = i;
-            //cout << mimeCharsetStart << endl;
             while(header[i] != '?'){
                 mimeCharset = mimeCharset + header[i];
                 i++;
 
-                if(i >= headerLenght) {
+                if(i >= headerLength) {
                     //ERROR
-                    break;
+                    return header;
                 }
             }
-            //cout << mimeCharset << endl;
-            mimeCharsetEnd = i - 1;
-            //cout << mimeCharsetEnd << endl;
             if(header[i] != '?') {
                 //ERROR;
-                break;
+                return header;
             }
             i++;
 
             if((header[i] == 'B') || (header[i] == 'b')){
                 mimeEncodeType = 0;
-                mimeEncodeTypeStart = i;
                 i++;
             } else if((header[i] == 'Q') || (header[i] == 'q')) {
                 mimeEncodeType = 1;
-                mimeEncodeTypeStart = i;
                 i++;
             } else {
                 // ERROR
-                break;
+                return header;
             }
-            //cout << mimeEncodeType << endl;
-            //cout << mimeEncodeTypeStart << endl;
             if(header[i] != '?') {
                 //ERROR;
-                break;
+                return header;
             } else {
                 i++;
-                mimeTextStart = i;
             }
-            //cout << mimeTextStart << endl;
             while((header[i] != '?') || (header[i+1] != '=')) {
                 mimeText = mimeText + header[i];
                 i++;
-                if(i >= headerLenght) {
+                if(i >= headerLength) {
                     //ERROR
-                    break;
+                    return header;
                 }
             }
-            //cout << mimeText << endl;
-            mimeTextEnd = i - 1;
-            //cout << mimeTextEnd << endl;
-            if((header[i] == '?') && (header[i+1] == '=')) {
-                i++;
-                mimeEnd = i;
-            } else {
-                //ERROR
-                break;
-            }
-
+            i++;
             if(mimeEncodeType == 1) {
                 output = output + quoted_printable_decode(mimeText, mimeCharset);
             }
 
             if(mimeEncodeType == 0) {
                 b64_output = base64_decode(mimeText);
-                for(p=0; p<b64_output.size(); p++){
+                for(int p=0; p<b64_output.size(); p++) {
                     b64 = b64_output[p];
 
                     if(b64<0){
                         b64 = b64 + 256;
                     }
 
-                    if(b64<=127){
+                    if(b64 <= 127) {
                         output = output + b64_output[p];
-                    }else if((b64>127)&&(b64<=255)){
-                        if((mimeCharset == "UTF-8") || (mimeCharset == "utf-8")){
+                    } else if((b64 > 127) && (b64 <= 255)) {
+                        if((mimeCharset == "UTF-8") || (mimeCharset == "utf-8")) {
                             output = output + utf8_table(b64);
-                        }else{
+                        } else {
                             output = output + charset_table(b64, mimeCharset);
                         }
                     }
-
                 }
             }
-
-            mimeCharset = "";
-            mimeText = "";
-
-            //cout << mimeEnd << " ";
-
         } else {
             output = output + header[i];
-            //cout << header[i];
         }
     }
 
